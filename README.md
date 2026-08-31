@@ -88,6 +88,18 @@ MobileNetV2) x 3 arms x 3 seeds = 36 runs. ResNet50 and YOLOv11 from paper 1 are
 omitted to keep the queue feasible on free Colab; the four retained cover both
 stable and unstable convergence behaviour, which the seed-variance analysis needs.
 
+Then build the tables:
+
+```
+python src/analyse.py --results results/results_nlst.csv --out tables/
+```
+
+`analyse.py` recomputes per-class F1, accuracy, the majority-class baseline and
+degeneracy from the stored confusion matrices rather than trusting the flags
+written at training time. A run that never predicts one of the three classes has
+a macro F1 that is not comparable to one that predicts all three, and is reported
+separately rather than averaged in.
+
 `runner.py` rebuilds its queue from `results.csv` on every start, so an
 interrupted session costs one run. Arms sweep innermost, so a partial queue still
 yields complete arm comparisons.
@@ -109,6 +121,7 @@ src/data.py                     tf.data pipeline over the frozen splits
 src/models.py                   the architectures, carried over from paper 1
 src/train.py                    one run -> metrics
 src/runner.py                   resumable experiment driver
+src/analyse.py                  results -> paper tables
 notebooks/                      Colab notebooks
 ```
 
