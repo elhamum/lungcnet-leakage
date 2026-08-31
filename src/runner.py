@@ -39,6 +39,7 @@ RESULT_FIELDS = KEY_FIELDS + [
     "val_accuracy", "val_loss",
     "per_class_f1_json", "confusion_json",
     "epochs_run", "best_epoch", "collapsed_to_single_class",
+    "classes_never_predicted", "majority_baseline",
     "train_seconds", "manifest_sha1", "split_sha1",
     "git_commit", "started_utc", "finished_utc", "status", "note",
 ]

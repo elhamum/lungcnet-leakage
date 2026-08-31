@@ -61,11 +61,20 @@ def train_one(cfg: dict, manifest: pd.DataFrame, split_col: str,
     h = pd.DataFrame(hist.history)
     best = int(h["val_loss"].idxmin())
 
-    # degenerate-run detection
+    # Degenerate-run detection.
+    #
+    # An earlier version only fired when fewer than two classes were predicted.
+    # That missed the case actually observed here: the model predicts two of
+    # three classes and never once predicts the third, giving it an F1 of zero
+    # while macro F1 still looks like a real score. Any class receiving no
+    # predictions at all is a degenerate run and must be flagged.
     n_pred_classes = int(len(np.unique(pred)))
+    classes_never_predicted = [str(CLASSES[i]) for i in range(len(CLASSES))
+                               if (pred == i).sum() == 0]
     majority_share = float(pd.Series(y_of(va)).value_counts(normalize=True).max())
     collapsed = bool(
         n_pred_classes < int(cfg["collapse_check"]["min_predicted_classes"])
+        or classes_never_predicted
         or (cfg["collapse_check"]["flag_if_val_acc_equals_majority_share"]
             and abs(float(h.loc[best, "val_accuracy"]) - majority_share) < 1e-3)
     )
@@ -83,6 +92,12 @@ def train_one(cfg: dict, manifest: pd.DataFrame, split_col: str,
         confusion_json=json.dumps(cm.tolist()),
         epochs_run=len(h), best_epoch=best + 1,
         collapsed_to_single_class=collapsed,
+        classes_never_predicted=";".join(classes_never_predicted),
+        # accuracy of always guessing the largest class in this test partition:
+        # the floor any real result has to clear
+        majority_baseline=round(
+            float(pd.Series(y_te).value_counts(normalize=True).max()) * 100, 2),
         train_seconds=round(secs, 1),
-        note="collapsed onto a single class" if collapsed else "",
+        note=(f"never predicted: {', '.join(classes_never_predicted)}"
+              if classes_never_predicted else ""),
     )
