@@ -1,4 +1,4 @@
-Put the outputs of `NLST_build_cohort_Colab.ipynb` here:
+
 
     manifest_nlst.csv          one row per image, from Drive
     participant_status.csv     download outcome per participant, from Drive
