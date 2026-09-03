@@ -1,0 +1,13 @@
+arch,arm,seed,macro_f1,accuracy,majority_baseline,never_predicted
+lungcnet,exam,0,35.83,48.1,39.66,suspicious
+lungcnet,patient,0,28.17,38.8,40.17,suspicious
+lungcnet,exam,1,36.47,49.22,39.66,suspicious
+lungcnet,patient,1,31.47,42.46,39.47,suspicious
+lungcnet,patient,2,31.33,42.84,39.66,suspicious
+vgg16,exam,0,36.96,49.66,39.66,suspicious
+vgg16,patient,0,30.12,41.79,40.17,suspicious
+vgg16,patient,1,31.12,41.75,39.47,suspicious
+vgg16,patient,2,34.02,47.67,39.66,suspicious
+mobilenetv2,exam,0,36.57,48.97,39.66,suspicious
+mobilenetv2,exam,1,39.13,52.41,39.66,suspicious
+mobilenetv2,patient,2,34.72,47.33,39.66,suspicious

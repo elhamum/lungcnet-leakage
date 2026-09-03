@@ -1,0 +1,13 @@
+arch,arm,f1_benign,f1_normal,f1_suspicious
+inceptionv3,slice,59.49,66.6,43.6
+inceptionv3,exam,55.74,51.84,26.13
+inceptionv3,patient,48.74,44.28,6.85
+lungcnet,slice,66.72,68.35,52.61
+lungcnet,exam,57.11,49.36,0.0
+lungcnet,patient,50.77,40.2,0.0
+mobilenetv2,slice,65.42,50.41,46.44
+mobilenetv2,exam,56.75,53.35,13.03
+mobilenetv2,patient,45.75,45.9,14.77
+vgg16,slice,76.33,82.0,68.5
+vgg16,exam,54.4,54.18,0.79
+vgg16,patient,52.04,43.22,0.0

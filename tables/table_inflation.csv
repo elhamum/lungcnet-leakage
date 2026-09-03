@@ -1,0 +1,5 @@
+arch,slice_minus_patient,exam_minus_patient
+inceptionv3,23.27,11.28
+lungcnet,32.24,5.17
+mobilenetv2,18.62,5.57
+vgg16,43.85,4.7

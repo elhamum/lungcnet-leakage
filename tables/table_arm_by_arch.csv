@@ -1,0 +1,13 @@
+arch,arm,macro_f1_mean,macro_f1_sd,accuracy_mean,above_baseline_mean,epochs_mean,n_seeds
+inceptionv3,slice,56.56,0.31,59.41,19.65,12.33,3
+inceptionv3,exam,44.57,2.81,49.54,9.89,7.33,3
+inceptionv3,patient,33.29,3.49,42.49,2.73,6.33,3
+lungcnet,slice,62.56,0.98,64.6,24.84,20.67,3
+lungcnet,exam,35.49,1.19,48.05,8.39,6.67,3
+lungcnet,patient,30.32,1.87,41.37,1.6,6.33,3
+mobilenetv2,slice,54.09,20.2,57.97,18.22,27.33,3
+mobilenetv2,exam,41.04,5.68,50.11,10.46,6.0,3
+mobilenetv2,patient,35.47,3.35,41.93,2.16,7.33,3
+vgg16,slice,75.61,2.68,76.74,36.98,18.67,3
+vgg16,exam,36.46,0.47,48.65,8.99,6.67,3
+vgg16,patient,31.75,2.02,43.74,3.97,6.0,3
