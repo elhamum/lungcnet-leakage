@@ -37,6 +37,8 @@ from __future__ import annotations
 
 import argparse
 import json
+import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 import numpy as np
@@ -48,17 +50,43 @@ from sklearn.neighbors import NearestNeighbors
 CLASSES = ["benign", "normal", "suspicious"]
 
 
-def load_images(df: pd.DataFrame, images_root: str, size: int) -> np.ndarray:
-    """One row per manifest row, greyscale, downsampled, flattened to [0, 1]."""
-    vecs = np.empty((len(df), size * size), dtype=np.float32)
-    for i, rel in enumerate(df["path"].to_numpy()):
-        path = Path(images_root) / rel
-        with Image.open(path) as im:
+def load_images(
+    df: pd.DataFrame, images_root: str, size: int, workers: int = 32
+) -> np.ndarray:
+    """One row per manifest row, greyscale, downsampled, flattened to [0, 1].
+
+    Threaded on purpose. On Colab the images sit behind the Google Drive FUSE
+    mount, where each file open costs a network round trip, so a serial loop
+    over ~5,800 files takes tens of minutes while the actual decoding is
+    trivial. The work is I/O bound and releases the GIL, so threads help.
+    """
+    n = len(df)
+    vecs = np.empty((n, size * size), dtype=np.float32)
+    paths = [Path(images_root) / p for p in df["path"].to_numpy()]
+    done = 0
+    step = max(250, n // 20)
+
+    def one(i: int) -> int:
+        with Image.open(paths[i]) as im:
             arr = np.asarray(
                 im.convert("L").resize((size, size), Image.BILINEAR),
                 dtype=np.float32,
             )
         vecs[i] = arr.ravel() / 255.0
+        return i
+
+    t0 = time.time()
+    with ThreadPoolExecutor(max_workers=workers) as pool:
+        for _ in as_completed([pool.submit(one, i) for i in range(n)]):
+            done += 1
+            if done % step == 0 or done == n:
+                rate = done / max(time.time() - t0, 1e-6)
+                eta = (n - done) / rate
+                print(
+                    f"    {done:,}/{n:,} images  ({rate:,.0f}/s, "
+                    f"{eta:,.0f}s left)",
+                    flush=True,
+                )
     return vecs
 
 
@@ -187,6 +215,11 @@ def main() -> None:
     ap.add_argument("--size", type=int, default=32,
                     help="downsample edge in pixels (default 32)")
     ap.add_argument("--out", type=Path, default=Path("data/results_control_knn.csv"))
+    ap.add_argument("--workers", type=int, default=32,
+                    help="parallel readers; raise it if Drive is slow")
+    ap.add_argument("--cache", type=Path, default=None,
+                    help="npy file to cache the loaded pixels in, so a rerun "
+                         "skips the download entirely")
     args = ap.parse_args()
 
     cfg = yaml.safe_load(args.config.read_text())
@@ -195,8 +228,25 @@ def main() -> None:
     manifest = pd.read_csv(cfg["manifest"])
     df = split_columns(cfg, manifest)
 
-    print(f"loading {len(df):,} images at {args.size}x{args.size} from {root}")
-    vecs = load_images(df, root, args.size)
+    if args.cache and args.cache.exists():
+        vecs = np.load(args.cache)
+        if vecs.shape != (len(df), args.size * args.size):
+            raise SystemExit(
+                f"{args.cache} holds {vecs.shape}, expected "
+                f"{(len(df), args.size * args.size)}; delete it and rerun"
+            )
+        print(f"loaded pixels from cache {args.cache}")
+    else:
+        print(
+            f"loading {len(df):,} images at {args.size}x{args.size} from {root} "
+            f"({args.workers} parallel readers)",
+            flush=True,
+        )
+        vecs = load_images(df, root, args.size, workers=args.workers)
+        if args.cache:
+            args.cache.parent.mkdir(parents=True, exist_ok=True)
+            np.save(args.cache, vecs)
+            print(f"cached pixels to {args.cache}")
 
     rows = []
     for arm in cfg["arms"]:
